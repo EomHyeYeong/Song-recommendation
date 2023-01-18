@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta property="og:title" content="노래 추천"/>
+    <meta property="og:description" content="당신의 인생곡을 추천해주세요!"/>
+    <meta property="og:image" content="../static/backgrd.jpg" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <title>노래 추천</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Noto Serif KR', serif;
+        }
+        .mypic {
+            width: 100%;
+            height: 300px;
+
+            background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("../static/backgrd.jpg");
+            background-position: center 30%;
+            background-size: cover;
+
+            color: #bbafa0;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .recommend{
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto 20px auto;
+
+            box-shadow: 0px 0px 3px 0px black;
+            padding: 20px;
+        }
+
+        .mypost {
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto 20px auto;
+
+            box-shadow: 0px 0px 3px 0px black;
+            padding: 20px;
+        }
+
+        .mypost > button {
+            margin-top: 15px;
+        }
+
+        .mycards {
+            width: 95%;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .mycards > .card {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .singer{
+            padding-bottom: 5px;
+            border-bottom: 1px solid #b4b4b4;
+        }
+
+        .rcm{
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        </style>
+    <script>
+        $(document).ready(function(){
+            show_comment()
+        });
+        function save_comment(){
+            let name = $('#name').val()
+            let comment = $('#comment').val()
+
+            $.ajax({
+                type: 'POST',
+                url: '/song',
+                data: {'sample_give':'post 확인'},
+                success: function (response) {
+                    alert(response['msg'])
+                    window.location.reload()
+                }
+            })
+        }
+        function show_comment(){
+            $.ajax({
+                type: "GET",
+                url: "/song",
+                data: {},
+                success: function (response) {
+                    console.log(response)
+
+                    for(let i = 0; response.length; i++){
+                        let img = response[i]['img']
+                        let title = response[i]['title']
+                        let singer = response[i]['singer']
+                        let nName = response[i]['nName']
+                        let comment = response[i]['comment']
+
+                        let temp_html=`<div class="col">
+                                            <div class="card">
+                                                <img src=${img} class="card-img-top">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">${title}</h6>
+                                                    <h6 class="card-title singer">${singer}</h6>
+                                                    <p class="card-text">${nName}</p>
+                                                    <p class="card-text">${comment}</p>
+                                                </div>
+                                            </div>
+                                        </div>`
+
+                        $('#music-card').append(temp_html)
+                    }
+                }
+            });
+        }
+
+        function recommend_btn(){
+            $.ajax({
+                type: 'POST',
+                url: '/song',
+                data: {'sample_give':'post 확인'},
+                success: function (response) {
+                }
+            })
+            window.location.href="recommend"
+        }
+    </script>
+</head>
+<body>
+    <!-- 상단 타이틀 -->
+    <div class="mypic">
+        <p></p>
+        <h5>당신의 인생곡을 추천해주세요!</h5>
+    </div>
+    <div class="d-grid gap-2 col-6 mx-auto">
+        <button class="btn btn-outline-secondary rcm" type="button" onclick="recommend_btn()">추천하러 가기</button>
+    </div>
+
+    <div class="mypost">
+        <!-- 추천 목록 -->
+        <div class="row row-cols-1 row-cols-md-4 g-4" id="music-card">
+            <div class="col">
+                <div class="card">
+                    <img src="../static/album_img.jpg" class="card-img-top">
+                    <div class="card-body">
+                        <h6 class="card-title">귀여운</h6>
+                        <h6 class="card-title singer">뚱냥이</h6>
+                        <p class="card-text">닉네임</p>
+                        <p class="card-text">코멘트</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mycards" id="comment-list">
+    </div>
+</body>
+</html>

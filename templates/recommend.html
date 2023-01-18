@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <title>노래 추천</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Noto Serif KR', serif;
+        }
+
+        h3{
+            margin-top: 20px;
+            margin-left: 30px;
+            color: #606060;
+        }
+        .mypic {
+            width: 100%;
+            height: 300px;
+
+            background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("../static/backgrd.jpg");
+            background-position: center 30%;
+            background-size: cover;
+
+            color: #bbafa0;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rec{
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto 20px auto;
+
+            box-shadow: 0px 0px 3px 0px black;
+            padding: 20px;
+        }
+
+        .music-list{
+            margin-top: 20px;
+        }
+
+        /* 다음 버튼 */
+        .next-btn{
+            width: 100%;
+
+        }
+        .pagination{
+            width: 130px;
+            margin: 10px auto 10px auto;
+        }
+
+        .regist-info{
+            margin-top: 20px;
+            border: 1px solid #b4b4b4;
+
+            padding: 10px;
+        }
+        .info{
+            padding: 10px;
+        }
+
+        .select-m{
+            border-bottom: 1px solid #c4c4c4;
+            box-shadow: 0 5px 5px -4px #c4c4c4;
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+        }
+
+        .mobile{
+            border-bottom: 1px solid #b4b4b4;
+            box-shadow: 0 5px 5px -4px #b4b4b4;
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .mobile-text{
+            margin-left: 10px;
+        }
+
+        .album-img{
+            width: 200px;
+            height: 200px;
+            border: 1px solid #b4b4b4;
+        }
+        .comment{
+            padding: 20px;
+        }
+        .comment-text{
+            color: #808080;
+        }
+        .comment > input{
+            margin-bottom: 20px;
+        }
+
+        /* 등록하기 버튼 */
+        .regist-btn{
+            width: 110px;
+            margin-top: 30px;
+        }
+
+        .rg-button{
+            background-color: white;
+            width: 100px;
+        }
+
+
+    </style>
+    <script>
+        var type_text = '제목으로 검색'
+        var type_page = 1
+        var music_list = []
+        var select_list = []
+
+        $(document).ready(function () {
+            get_top100()
+
+            var windowWidth = $( window ).width();
+            let temp_html = ``
+
+            if(windowWidth < 600){
+                temp_html = `<div class="mobile">
+                                    <div>
+                                        <img src="../static/album_img.jpg" class="album-img" id="album-img">
+                                    </div>
+                                    <div>
+                                        <h3 class="mobile-text" id="album-title">제목</h3>
+                                        <h3 class="mobile-text" id="album-singer">가수</h3>
+                                    </div>
+                                </div>`
+            } else{
+                temp_html = `<div class="select-m" id="select">
+                    <div id="select-img">
+                        <img src="../static/album_img.jpg" class="album-img" id="album-img">
+                    </div>
+                    <div id="select-info">
+                        <h3 id="album-title">제목</h3>
+                        <h3 id="album-singer">가수</h3>
+                    </div>
+                </div>`
+            }
+
+            $('#select-box').append(temp_html)
+        });
+
+        // 노래 검색
+        function search_music() {
+            let search = $('#search-text').val()
+            //search.trim()
+
+            $.ajax({
+                type: 'POST',
+                url: '/recommend/rcm_song',
+                data: {'search_give': search, 'type_give':type_text},
+                success: function (response) {
+                    console.log(response)
+                    music_list = response
+                    type_page = 1
+                    range_list(response, type_page)
+                }
+            })
+        }
+        // 검색 버튼 타입 가져오기
+        $(function(){
+            button_type($('#title-text'))
+            button_type($('#singer-text'))
+            button_type($('#total-text'))
+        })
+        function button_type(e){
+            e.click(function (){
+                type_text = e.text()
+                $('#btn-type').text(type_text);
+            })
+        }
+
+        // top100 가져오기 (페이지 접속시 자동)
+        function get_top100() {
+            $.ajax({
+                type: "GET",
+                url: "/recommend/top100",
+                data: {},
+                success: function (response) {
+                    music_list = response
+                    range_list()
+
+                }
+            });
+        }
+
+        function range_list(){
+            $('#music-table').empty()
+            if (music_list.length < 20){
+                $('#dis-2').attr('class', 'page-item');
+                $('#dis-3').attr('class', 'page-item disabled');
+                $('#dis-4').attr('class', 'page-item disabled');
+            } else if (music_list.length < 6){
+                $('#dis-2').attr('class', 'page-item disabled');
+                $('#dis-1').attr('class', 'page-item disabled');
+            }
+
+            for(let i = ((type_page - 1) * 5); i < (type_page * 5 ); i++){
+                let rank = music_list[i]['rank']
+                let title = music_list[i]['title']
+                let name = music_list[i]['name']
+
+                let temp_html=`<tr onclick="select(${i})">
+                                <th scope="row">${rank}</th>
+                                <td>${title}</td>
+                                <td>${name}</td>`
+
+                $('#music-table').append(temp_html)
+            }
+        }
+        $(function(){
+            page_type($('#1'))
+            page_type($('#2'))
+            page_type($('#3'))
+            page_type($('#4'))
+        })
+        function page_type(p){
+            let before = type_page
+
+            p.click(function (){
+                before = type_page
+                type_page = p.text()
+                range_list(music_list, type_page)
+
+                let able = '#dis-' + before
+                let disable = '#dis-' + type_page
+
+                $(able).attr('class', 'page-item');
+                $(disable).attr('class', 'page-item disabled');
+                // class : alert-secondary
+            })
+        }
+
+        // Music list select
+        function select(i){
+            let select_code = music_list[i]['code']
+            $.ajax({
+                type: 'POST',
+                url: '/recommend/select_search',
+                data: {'code_give':select_code},
+                success: function (response) {
+                    let img = response['img']
+                    let singer = response['name']
+
+                    $('#album-img').attr('src', img);
+                    $('#album-title').text(music_list[i]['title']);
+                    $('#album-singer').text(singer);
+
+                    if (select_list.length == 0){
+                        select_list.push(img)
+                        select_list.push(music_list[i]['title'])
+                        select_list.push(singer)
+                    } else{
+                        select_list[0] = img
+                        select_list[1] = music_list[i]['title']
+                        select_list[2] = singer
+                    }
+                }
+            })
+        }
+
+        // 등록하기 버튼
+        function register_info(){
+            let nName = $('#nName').val()
+            let comment = $('#comment').val()
+
+            if (select_list.length == 0){
+                alert('노래를 선택하세요!')
+            } else{
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/recommend/register',
+                    data: {'img_give':select_list[0], 'title_give':select_list[1],
+                            'singer_give':select_list[2], 'nName_give':nName, 'comment_give':comment},
+                    success: function (response) {
+                        alert(response)
+                        window.location.href="../"
+                    }
+                })
+                }
+        }
+    </script>
+</head>
+<body>
+    <!-- 상단 타이틀 -->
+    <div class="mypic">
+        <p></p>
+        <h5>당신의 인생곡을 추천해주세요!</h5>
+    </div>
+
+
+    <!-- 하단 내용물 -->
+    <div class="rec">
+
+        <!-- input bar -->
+        <div class="input-group mb-3">
+            <!-- 가수.제목.가수제목 -->
+            <div class="input-group mb-3">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" id="btn-type">제목으로 검색
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" id="title-text">제목으로 검색</a></li>
+                    <li><a class="dropdown-item" id="singer-text">가수이름으로 검색</a></li>
+                    <li><a class="dropdown-item" id="total-text">제목 + 가수이름</a></li>
+                </ul>
+                <!-- input -->
+                <input type="text" class="form-control" placeholder="입력해주세요" aria-label="Recipient's username"
+                        id="search-text">
+                <button onclick="search_music()" class="btn btn-outline-secondary" type="button">검색</button>
+            </div>
+        </div>
+
+        <!-- Music List -->
+        <div class="list-group">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1">Music List</span>
+            </div>
+
+            <div class="music-list">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th scope="col" width="10%">NO</th>
+                        <th scope="col" width="40%">제목</th>
+                        <th scope="col">가수</th>
+                    </tr>
+                    </thead>
+                    <tbody id="music-table">
+                    <tr onclick="select()">
+                        <th scope="row">1</th>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">2</th>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">3</th>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">4</th>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">5</th>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="next-btn">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                        <li class="page-item disabled" id="dis-1"><a class="page-link text-dark" id="1">1</a></li>
+                        <li class="page-item" id="dis-2"><a class="page-link text-dark" id="2">2</a></li>
+                        <li class="page-item" id="dis-3"><a class="page-link text-dark"  id="3">3</a></li>
+                        <li class="page-item" id="dis-4"><a class="page-link text-dark" id="4">4</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+
+            <!-- 정보 등록 -->
+        <div class="regist-info">
+            <div id = select-box>
+                <div class="container-fluid">
+                    <span class="navbar-brand mb-0 h1 info" >Info</span>
+                </div>
+            </div>
+            <div class="comment">
+                <input id='nName' type="email" class="form-control" placeholder="닉네임">
+                <div class="form-floating">
+                    <textarea id="comment" class="form-control" placeholder="Leave a comment here" id="floatingTextarea"></textarea>
+                    <label for="floatingTextarea" class="comment-text">코멘트</label>
+                </div>
+
+                <div class="regist-btn">
+                    <button type="button" class="btn btn-outline-secondary rg-button" onclick="register_info()">등록하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
