@@ -8,7 +8,7 @@ headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/
 
 # db 임포트
 from pymongo import MongoClient
-client = MongoClient('mongodb+srv://sparta:ghkdtpwns10@cluster0.yyr5hua.mongodb.net/Cluster0?retryWrites=true&w=majority')
+client = MongoClient('DB_URL')
 db = client.dbsparta
 
 ### 메인 페이지
